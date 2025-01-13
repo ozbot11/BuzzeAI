@@ -5,111 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Culinary Creators Poster</title>
     <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fff4e6;
-            color: #5f3920;
+        @page { size: letter; margin: 0; }
+        body { 
+            margin: 0; 
+            font-family: Arial, sans-serif; 
+            color: white; 
+            background: linear-gradient(45deg, #f17300, #f9b949);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .poster {
+            text-align: center;
+            position: relative;
+            background: linear-gradient(135deg, #1e0a3c, #461a66, #6b27a0);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 1200px;
+        }
+        .poster::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://www.transparenttextures.com/patterns/squares.png');
+            opacity: 0.2;
+            z-index: 0;
         }
 
-        .poster {
-            width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-            border: 2px dashed #5f3920;
-            border-radius: 20px;
-            background: #fffde7;
+        .poster > * {
+            position: relative;
+            z-index: 1;
+            color: white;
         }
 
         .title {
-            font-size: 3em;
-            color: #5f3920;
+            font-size: 4em;
             text-transform: uppercase;
+            margin: 20px 0;
+            font-family: 'Brush Script MT', cursive;
+        }
+
+        .mission,
+        .purpose {
             font-weight: bold;
-            margin: 0;
+            margin-bottom: 20px;
+            font-family: 'Cambria', serif;
         }
 
-        .subtitle {
-            font-size: 1.8em;
-            color: #5f3920;
-            margin: 1em 0;
-        }
-
-        .logo {
-            width: 120px;
-            height: 120px;
-            background: url('images/logo.png') no-repeat center;
-            background-size: cover;
+        #img-container {
+            width: 100%;
+            text-align: center;
             margin: 20px auto;
-            display: block;
-            border-radius: 50%;
         }
 
-        .banner {
-            background-color: #5f3920;
-            color: #fffde7;
+        #img-container img {
+            max-width: 80%;
+            height: auto;
+        }
+        
+        .highlight {
             font-size: 1.5em;
+            color: #F9B949;
             font-weight: bold;
-            padding: 15px 0;
-            margin: 30px 0;
-            border-radius: 20px;
-        }
-
-        .section {
-            text-align: left;
-            margin: 20px auto;
-            max-width: 600px;
-            font-size: 1.2em;
-            line-height: 1.8;
-        }
-
-        .section-title {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin: 20px 0 10px;
-            color: #5f3920;
-        }
-
-        .section-content {
-            font-size: 1.2em;
-            color: #5f3920;
         }
 
         .footer {
             font-size: 2em;
             font-weight: bold;
-            color: #5f3920;
-            margin-top: 40px;
-            padding: 20px;
-            border-top: 2px dashed #5f3920;
+            color: #F9B949;
+            margin: 40px 0;
         }
     </style>
 </head>
 <body>
     <div class="poster">
         <div class="title">Culinary Creators</div>
-        <div class="logo"></div>
-        <div class="subtitle">Explore the Art of Cooking & Baking</div>
-        <div class="banner">Join our Community</div>
-
-        <div class="section">
-            <p class="section-title">Mission</p>
-            <p class="section-content">To inspire food enthusiasts to explore the art of cooking and baking through hands-on experiences, community events, and expert mentorship.</p>
+        
+        <div class="mission">
+            Mission: To inspire food enthusiasts to explore the art of 
+            cooking and baking through hands-on experiences, community 
+            events, and expert mentorship.
         </div>
 
-        <div class="section">
-            <p class="section-title">Purpose</p>
-            <p class="section-content">Create a welcoming community where food lovers can share their passion for gastronomy, improve their skills, and foster meaningful connections.</p>
+        <div class="purpose">
+            Purpose: Create a welcoming community where food lovers can 
+            share their passion for gastronomy, improve their skills, and 
+            foster meaningful connections.
+        </div>
+        
+        <p><strong>Intended Audience: </strong> Food enthusiasts of all ages, including aspiring chefs, 
+        amateur cooks, and anyone passionate about the culinary arts.</p>
+
+        <div id="img-container">
+            <img src="/path/to/your/image.jpg" alt="An inspiring culinary image">
         </div>
 
-        <div class="section">
-            <p class="section-title">Audience</p>
-            <p class="section-content">Food enthusiasts of all ages, including aspiring chefs, amateur cooks, and anyone passionate about culinary arts.</p>
-        </div>
+        <p class="highlight">Join Us!</p>
 
-        <div class="footer">Join us and begin your culinary adventure!</div>
+        <div class="footer">For more information, connect with us at culinarycreators@domain.com</div>
     </div>
+
+    <script>
+        window.onload = function() {
+            var page = document.body;
+            var content = page.querySelector('.poster');
+            var pageHeight = page.offsetHeight;
+            var contentHeight = content.scrollHeight;
+            var scale = pageHeight / contentHeight;
+            content.style.transform = `scale(${scale})`;
+            content.style.transformOrigin = 'top left';
+        }
+    </script>
 </body>
 </html>

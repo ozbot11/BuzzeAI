@@ -1,0 +1,90 @@
+\documentclass[a4paper,landscape]{article}
+\usepackage{graphicx}
+\usepackage[top=1cm, bottom=1cm, left=2cm, right=2cm]{geometry}
+\usepackage{color}
+\usepackage{fontspec}
+\setmainfont{Arial}
+
+\begin{document}
+\pagestyle{empty}
+\begin{center}
+    \includegraphics[width=\textwidth]{banner.jpg} % A full-width image of a culinary banner.
+    
+    % Main Title
+    \vspace{-1cm}
+    \textbf{\fontsize{40}{50}\selectfont 
+    \textcolor{red}{Culinary Creators}}\\
+    \vspace{0.3cm}
+    
+    % Mission and Purpose Subtitle
+    \textbf{\fontsize{24}{28}\selectfont
+    \textit{Inspiring Food Enthusiasts to Explore Culinary Arts}}
+    \vspace{0.5cm}
+
+    % Poster Body
+    \begin{minipage}{0.7\textwidth}
+    \centering
+    \fontsize{16}{20}\selectfont
+    Welcome to a community where passion for \textcolor{red}{gastronomy} meets \textcolor{red}{creative expression}. 
+    Join hands-on experiences and community events to hone your skills with fellow food lovers. \\\vspace{0.5cm}
+    \end{minipage}
+    
+    % Features Section
+    \begin{minipage}{0.3\linewidth}
+    \begin{center}
+    \includegraphics[width=\linewidth]{cooking.png} % Cooking icon
+    \end{center}
+    \end{minipage}
+    \begin{minipage}{0.3\linewidth}
+    \textbf{\textcolor{red}{Unique Features:}}
+    \begin{itemize}
+        \item Expert mentorship from seasoned chefs.
+        \item Interactive workshops and competitions.
+        \item Social events to connect with fellow foodies.
+    \end{itemize}
+    \end{minipage}
+    
+    \vspace{1cm}
+    
+    % Event Details
+    \textbf{\fontsize{20}{24}\selectfont
+    \textcolor{red}{Next Event: Cooking Masterclass}}\\
+    \fontsize{18}{22}\selectfont
+    \textbf{Date:} Sat, Nov 12 | \textbf{Location:} Culinary Arts Center\\
+    \emph{Join us for a day of inspiration, learning, and fun!}\\
+    
+    % Contact Information
+    \vspace{1cm}
+    \textbf{\fontsize{14}{18}\selectfont
+    \textcolor{red}{Get in Touch:}}\\
+    \fontsize{12}{16}\selectfont
+    Email: culinarycreators@example.com \\
+    Phone: +123 456 7890 \\
+    \emph{Visit our website for more details!}
+
+    \vspace{0.5cm}
+    \includegraphics[width=0.15\textwidth]{logo.png} % Club logo at the bottom-right
+\end{center}
+
+\hrule
+\vspace{0.5cm}
+\begin{center}
+    \fontsize{10}{13}\selectfont
+    Follow us on Social Media: \textbf{@culinarycreators}
+\end{center}
+
+\end{document}
+```
+
+### Design Choices Explanation:
+
+- **Main Title**: Used bold and large font size with a red color to immediately catch the audience's attention, reflecting the energy and passion of the club.
+- **Mission Subtitle**: Italicized text under the main title quickly conveys the essence of the club in an elegant, inviting tone.
+- **Poster Body**: A concise description in a medium font size to maintain readability, providing insight into the club's goals and welcoming tone.
+- **Features Section**: Includes a cooking icon and a red color theme for the bullet points to highlight the club’s unique offerings and correspond to the passion of culinary arts.
+- **Event Details**: Important information like the event name, date, and location are prominently placed for visibility, using a larger font and red highlights.
+- **Contact Information**: Positioned at the bottom, using a readable size and style, ensuring interested parties can easily reach out.
+- **Visual Elements**: A banner and logo add visual appeal, helping establish brand identity.
+- **Social Media and Footer**: Provides easy access to further engagement, aligning with modern promotion strategies.
+
+This layout maintains a clear hierarchy, ensuring that each piece of information flows naturally to guide the viewer's eye through the poster.

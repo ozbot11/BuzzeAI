@@ -1,0 +1,237 @@
+import os
+import openai
+import requests
+import logging
+from dotenv import load_dotenv
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+import asyncio
+from PyPDF2 import PdfReader
+from weasyprint import HTML
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
+
+# OpenAI and Unsplash API setup
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+
+def read_club_info(file_path: str) -> dict:
+    """Read club information from a .txt file."""
+    club_info = {}
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                if ":" in line:
+                    key, value = line.split(":", 1)
+                    club_info[key.strip().lower()] = value.strip()
+    except Exception as e:
+        logging.error(f"Error reading club info file: {e}")
+        raise
+    return club_info
+
+def load_templates_and_ads(template_dir: str) -> dict:
+    """Load templates and ad examples from the specified directory."""
+    templates = {}
+
+    try:
+        for root, dirs, files in os.walk(template_dir):
+            for file in files:
+                if file.endswith('.html'):
+                    html_path = os.path.join(root, file)
+                    with open(html_path, 'r', encoding='utf-8') as html_file:
+                        templates[file] = html_file.read()
+    except Exception as e:
+        logging.error(f"Error loading templates: {e}")
+        raise
+
+    return {"templates": templates}
+
+def extract_keywords(club_info: dict) -> list:
+    """
+    Use GPT to extract relevant keywords from the club info for image search.
+    """
+    prompt = f"""
+    Analyze the following club information and extract 5-10 keywords that describe the club visually:
+    Name: {club_info.get('name', 'N/A')}
+    Mission: {club_info.get('mission', 'N/A')}
+    Purpose: {club_info.get('purpose', 'N/A')}
+    Intended Audience: {club_info.get('audience', 'N/A')}
+
+    The keywords should represent themes, objects, or activities that can be used to find relevant images for this club.
+    Provide the keywords as a comma-separated list.
+    """
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200,
+            temperature=0.7
+        )
+        raw_keywords = response.choices[0].message.content.strip()
+        keywords = [keyword.strip() for keyword in raw_keywords.split(",")]
+        return keywords
+    except Exception as e:
+        logging.error(f"Error extracting keywords: {e}")
+        return []
+
+def search_unsplash(keywords: list) -> str:
+    """
+    Search Unsplash for an image URL based on keywords.
+    """
+    base_url = "https://api.unsplash.com/search/photos"
+    headers = {"Authorization": f"Client-ID {UNSPLASH_ACCESS_KEY}"}
+
+    try:
+        for keyword in keywords:
+            params = {"query": keyword, "per_page": 1}
+            response = requests.get(base_url, headers=headers, params=params)
+            if response.status_code == 200:
+                results = response.json().get("results", [])
+                if results:
+                    return results[0]["urls"]["regular"]  # Return the first image URL
+            else:
+                logging.error(f"Unsplash API error for keyword '{keyword}': {response.status_code}")
+    except Exception as e:
+        logging.error(f"Error searching Unsplash: {e}")
+
+    return ""  # Return an empty string if no image is found
+
+def generate_content(club_info: dict, document_type: str, templates: dict, image_url: str) -> list:
+    """
+    Generate three versions of HTML content using OpenAI API, incorporating templates.
+    """
+    template_content = "\n\n".join(templates.values())
+
+    prompt = f"""
+    Create three visually striking and creative versions of a {document_type} for the following club:
+    Name: {club_info['name']}
+    Mission: {club_info['mission']}
+    Purpose: {club_info['purpose']}
+    Intended Audience: {club_info['audience']}
+
+    Use the following templates as examples of basic designs:
+    {template_content}
+
+    Each version should:
+    - Exceed the quality of the provided templates
+    - Incorporate a cohesive color theme, effective use of borders, and layout design
+    - Use the provided image URL ({image_url}) in a way that enhances the design
+
+    Format your response as three complete HTML documents, separated by "---VERSION---" markers. Do not include any additional text or explanations outside the HTML structure.
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a professional document creator."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=3000,
+            n=1,
+        )
+        raw_output = response.choices[0].message.content.strip()
+        versions = raw_output.split("---VERSION---")
+        return [version.strip() for version in versions if version.strip()]
+    except Exception as e:
+        logging.error(f"Error generating content: {e}")
+        raise
+
+def extract_pdf_content(file_path):
+    """Extract text content from a PDF file."""
+    try:
+        reader = PdfReader(file_path)
+        text_content = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+        return text_content
+    except Exception as e:
+        logging.error(f"Error extracting content from {file_path}: {e}")
+        return ""
+
+def evaluate_posters_with_gpt(poster_files):
+    """
+    Use GPT to evaluate and rank posters based on their content and structure.
+
+    :param poster_files: List of paths to the poster PDF files.
+    :return: Name of the best poster.
+    """
+    try:
+        # Extract content from each poster
+        posters_content = {file: extract_pdf_content(file) for file in poster_files}
+
+        # Construct prompt for GPT
+        prompt = f"""
+        Analyze and rank the following posters based on their effectiveness and creativity.
+
+        Poster 1:
+        {posters_content.get(poster_files[0], '')}
+
+        Poster 2:
+        {posters_content.get(poster_files[1], '')}
+
+        Poster 3:
+        {posters_content.get(poster_files[2], '')}
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500
+        )
+
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logging.error(f"Error evaluating posters with GPT: {e}")
+        return "Error in evaluation."
+
+async def main():
+    input_file = "club_info.txt"
+    html_output_pdfs = ["club_poster_html_1.pdf", "club_poster_html_2.pdf", "club_poster_html_3.pdf"]
+    template_dir = "templates"
+
+    logging.info("Reading club information from file...")
+    club_info = read_club_info(input_file)
+
+    logging.info("Loading templates and ads...")
+    assets = load_templates_and_ads(template_dir)
+
+    logging.info("Extracting keywords and searching for images...")
+    keywords = extract_keywords(club_info)
+    image_url = search_unsplash(keywords)
+
+    logging.info("Generating HTML content...")
+    html_versions = generate_content(club_info, "poster", assets["templates"], image_url)
+
+    for i, html_content in enumerate(html_versions):
+        try:
+            with open(f"out{i}.html", "w") as f:
+                f.write(html_content)
+
+            output_pdf = html_output_pdfs[i]
+            logging.info(f"Creating HTML-based PDF {i + 1}...")
+            HTML(string=html_content).write_pdf(output_pdf)
+        except IndexError:
+            logging.error(f"Not enough output filenames provided for HTML versions. Skipping version {i + 1}.")
+        except Exception as e:
+            logging.error(f"Error generating HTML-based PDF {i + 1}: {e}")
+
+    result = evaluate_posters_with_gpt(html_output_pdfs)
+    print(result)
+
+    logging.info(f"Process complete. HTML-based PDFs: {html_output_pdfs}")
+
+if __name__ == "__main__":
+    asyncio.run(main())

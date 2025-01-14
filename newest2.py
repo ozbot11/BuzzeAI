@@ -128,7 +128,7 @@ def search_unsplash(keywords: list, output_folder: str) -> str:
 
     return selected_image
 
-def generate_content(club_info: dict, document_type: str, templates: dict, image_folder: str) -> str:
+def generate_content(club_info: dict, document_type: str, templates: dict, image_folder: str, image: str) -> str:
     """
     Generate HTML content using OpenAI API, incorporating templates.
     """
@@ -145,11 +145,10 @@ def generate_content(club_info: dict, document_type: str, templates: dict, image
     {template_content}
 
     The new design should exceed the quality of the provided templates and incorporate a cohesive color theme, effective use of borders, and layout design.
-    Additionally, an image from the folder '{image_folder}' is available for use. You may use it in a way that enhances the poster design. Try to incorporate one of the images into the poster you create.
+    Additionally, an image from the folder '{image_folder}' is available for use. You may use it in a way that enhances the poster design. From this folder, take the image named {image}.jpg. Make sure to incorporate this in your html and finalized poster.
 
     Format your response as a complete HTML document with embedded CSS. Do not include any additional text or explanations.
 
-    
     Use HTML and CSS for complete control over the document's appearance. Be creative and artistic in your design! It will be rendered by the Weasyprint library.
 
     Consider using these elements to enhance the visual appeal:
@@ -174,44 +173,75 @@ def generate_content(club_info: dict, document_type: str, templates: dict, image
 
     I don't want too many failure points, so try to implement the best 20% of ideas that will yield 80% of the impact.
 
-    Depending on the type of document you are generating, the following CSS and JavaScript to ensure content fits on one page and scales dynamically:
-<style> @page {{ size: letter; margin: 0; }} body {{ width: 100vw; height: 100vh; margin: 0; padding: 1cm; box-sizing: border-box; overflow: hidden; }} .content {{ width: 100%; height: 100%; overflow: hidden; }} </style> <script> function scaleContent() {{ var content = document.querySelector('.content'); var scaleX = document.body.clientWidth / content.offsetWidth; var scaleY = document.body.clientHeight / content.offsetHeight; var scale = Math.min(scaleX, scaleY); content.style.transform = `scale(${{scale}})`; content.style.transformOrigin = 'top left'; }} window.onload = scaleContent; window.onresize = scaleContent; </script>
+    Depending on the type of document you are generating, the following HTML, CSS, and JavaScript to ensure content fits on one page and scales dynamically. Use this alongside your generated HTML. This is just to show you how to make sure the single page is filled out perfectly by the poster.
 
-    Format your response as a complete HTML document with embedded CSS.
-    Format your response as a complete HTML document with embedded CSS.
-    Use the following CSS to ensure content fits on one page:
-    <style>
-    @page {{ size: letter; margin: 0; }}
-    body {{ width: 100%; height: 100vh; margin: 0; padding: 1cm; box-sizing: border-box; overflow: hidden; }}
-    .content {{ max-height: 100%; overflow: auto; }}
-    </style>
-    Wrap your main content in a div with the 'content' class.
-    Add the following JavaScript to scale content if it exceeds the page height:
+    <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Perfect Scaling</title>
+            <style>
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    background-color: #f0f0f0;
+                }}
 
+                .page {{
+                    width: 8.5in;
+                    height: 11in;
+                    background: white;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    overflow: hidden;
+                    position: relative;
+                }}
 
-    <script>
-        window.onload = function() {{
-            var page = document.getElementById('page');
-            var content = page.querySelector('.content');
-            
-            // Get dimensions of the page and content
-            var pageWidth = page.offsetWidth;
-            var pageHeight = page.offsetHeight;
-            var contentWidth = content.scrollWidth;
-            var contentHeight = content.scrollHeight;
+                .content {{
+                    padding: 1in;
+                    box-sizing: border-box;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="page" id="page">
+                <div class="content">
+                    <h1>Your Content Here</h1>
+                    <p>Add more content to test perfect scaling for both height and width.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <p>Ut ac quam id nunc placerat fringilla ut id eros.</p>
+                </div>
+            </div>
 
-            // Calculate scale factors for both width and height
-            var widthScale = pageWidth / contentWidth;
-            var heightScale = pageHeight / contentHeight;
+            <script>
+                window.onload = function() {{
+                    var page = document.getElementById('page');
+                    var content = page.querySelector('.content');
+                    
+                    // Get dimensions of the page and content
+                    var pageWidth = page.offsetWidth;
+                    var pageHeight = page.offsetHeight;
+                    var contentWidth = content.scrollWidth;
+                    var contentHeight = content.scrollHeight;
 
-            // Use the smaller scale to ensure the content fits within both dimensions
-            var scale = Math.min(widthScale, heightScale);
+                    // Calculate scale factors for both width and height
+                    var widthScale = pageWidth / contentWidth;
+                    var heightScale = pageHeight / contentHeight;
 
-            // Apply scaling
-            content.style.transform = `scale(${{scale}})`;
-            content.style.transformOrigin = 'top left';
-        }}
-    </script>
+                    // Use the smaller scale to ensure the content fits within both dimensions
+                    var scale = Math.min(widthScale, heightScale);
+
+                    // Apply scaling
+                    content.style.transform = `scale(${{scale}})`;
+                    content.style.transformOrigin = 'top left';
+                }}
+            </script>
+        </body>
+        </html>
     """
 
     # <script>
@@ -239,6 +269,98 @@ def generate_content(club_info: dict, document_type: str, templates: dict, image
     except Exception as e:
         logging.error(f"Error generating content: {e}")
         raise
+
+def extract_pdf_content(file_path):
+    """Extract text content from a PDF file."""
+    try:
+        reader = PdfReader(file_path)
+        text_content = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+        return text_content
+    except Exception as e:
+        logging.error(f"Error extracting content from {file_path}: {e}")
+        return ""
+
+def evaluate_posters_with_gpt(poster_files):
+    """
+    Use GPT to evaluate and rank posters based on their content and structure.
+
+    :param poster_files: List of paths to the poster PDF files.
+    :return: Name of the best poster.
+    """
+    try:
+        # Extract content from each poster
+        posters_content = {file: extract_pdf_content(file) for file in poster_files}
+
+        # Construct prompt for GPT
+        prompt = """
+        You are a graphic design and content evaluation expert.
+        The following are the extracted contents from three posters. Your task is to analyze and determine which poster is the best based on the following criteria:
+        - Visual appeal (if inferred from text descriptions)
+        - Organization and clarity of content
+        - Overall effectiveness in delivering its message
+
+        Rank the posters from best to worst and provide a brief explanation for your choice.
+
+        Give a poster 5 points for having the following structure:
+        {
+            "Title": "<Poster Title>",
+            "Style": {
+                "Background": ["<Color>", "<Gradient>"]
+            },
+            "Sections": [
+                {
+                    "Title": "<SectionTitle>",
+                    "Style": {
+                        "Border": ["<Color>", "<Outline>"]
+                    },
+                    "Contents": [
+                        {
+                            "Text": "<Information>",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        Take away a point for each missing element.
+
+        Then, give it an extra 3 points if it incorporates and image.
+
+        Now, rank the posters based on their point totals.
+
+        Poster 1:
+        {poster1_content}
+
+        Poster 2:
+        {poster2_content}
+
+        Poster 3:
+        {poster3_content}
+
+        Provide your response as:
+        1. Best Poster: Poster X (with a brief explanation)
+        2. Second Best: Poster Y (with a brief explanation)
+        3. Third Best: Poster Z (with a brief explanation)
+        """.format(
+            poster1_content=posters_content[poster_files[0]],
+            poster2_content=posters_content[poster_files[1]],
+            poster3_content=posters_content[poster_files[2]]
+        )
+
+        # Call OpenAI GPT API
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500
+        )
+
+        # Parse and return the response
+        evaluation = response.choices[0].message.content.strip()
+        return evaluation
+
+    except Exception as e:
+        logging.error(f"Error evaluating posters with GPT: {e}")
+        return "Error in evaluation."
 
 def create_pdf_latex(club_info: dict, image: str, filename: str):
     """Create a PDF using LaTeX."""
@@ -296,11 +418,16 @@ async def main():
 
     # Generate HTML content and create HTML-based PDF
     logging.info("Generating HTML content...")
-    html_content = generate_content(club_info, "poster", assets["templates"], image_folder)
+    html_content = generate_content(club_info, "poster", assets["templates"], image_folder, keywords[0])
     with open("poster.html", "w") as html_file:
         html_file.write(html_content)
     logging.info("Creating HTML-based PDF...")
     HTML(string=html_content).write_pdf(html_output_pdf)
+
+    # Determine best poster
+    poster_files = ["poster1.pdf", "poster2.pdf", "poster3.pdf"]  # Replace with actual file paths
+    result = evaluate_posters_with_gpt(poster_files)
+    print(result)
 
     # Generate LaTeX-based PDF
     logging.info("Creating PDF with LaTeX...")

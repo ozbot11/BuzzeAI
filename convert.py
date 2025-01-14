@@ -28,7 +28,7 @@ logging.basicConfig(
 async def main():
     with open("out0.html", "r") as f:
         html_content = f.read()
-        HTML(string=html_content).write_pdf('out0.pdf', optimize_images=True, presentational_hints=True)
+        HTML(string=html_content).write_pdf('out0.pdf', optimize_images=True, presentational_hints=True, )
 
 if __name__ == "__main__":
     asyncio.run(main())
